@@ -1,6 +1,6 @@
 // Helper methods for downloading a file over HTTP
 
-package main
+package downloader
 
 import (
 	"fmt"

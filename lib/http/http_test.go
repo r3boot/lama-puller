@@ -1,12 +1,13 @@
-package main
+package http
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStatusEndpoint(t *testing.T) {

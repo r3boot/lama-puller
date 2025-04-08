@@ -1,6 +1,6 @@
 // Functions and types for interacting with virtual environments
 
-package main
+package venv
 
 import (
 	"bufio"

@@ -1,17 +1,18 @@
 // Functions for expanding gzipped tarballs
 
-package main
+package unarchive
 
 import (
 	"archive/tar"
 	"compress/gzip"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // Ensures that a given file is gzip-encoded

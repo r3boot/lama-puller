@@ -1,10 +1,11 @@
-package main
+package util
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"os/exec"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // failedCommandLogger will print a bunch of context to the terminal when in debug mode

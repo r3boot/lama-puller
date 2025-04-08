@@ -14,10 +14,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/r3boot/lama_puller/lib/http"
 )
 
 var (
-	appName               = "ansible-puller"
+	appName               = "lama-puller"
 	hostname              = ""
 	ansibleDisabled       = false
 	ansibleRunning        = false
@@ -26,43 +28,43 @@ var (
 
 	// Prometheus Metrics
 	promAnsibleIsRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ansible_puller_running",
-		Help: "Whether or not Ansible-Pull is currently running",
+		Name: "lama_puller_running",
+		Help: "Whether or not Lama Puller is currently running",
 	})
 	promAnsibleRuns = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "ansible_puller_runs",
-		Help: "Number of Ansible-Pull runs",
+		Name: "lama_puller_runs",
+		Help: "Number of Lama Puller runs",
 	})
 	promAnsibleRunTime = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ansible_puller_run_time_seconds",
+		Name: "lama_puller_run_time_seconds",
 		Help: "Time it took ansible to run",
 	})
 	promAnsibleIsDisabled = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ansible_puller_disabled",
-		Help: "Whether or not Ansible-Pull is currently locked/disabled",
+		Name: "lama_puller_disabled",
+		Help: "Whether or not Lama Puller is currently locked/disabled",
 	})
 	promAnsibleLastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ansible_puller_last_success",
+		Name: "lama_puller_last_success",
 		Help: "UTC Epoch timestamp of last Successful Ansible run",
 	})
 	promAnsibleSummary = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ansible_puller_play_summary",
+		Name: "lama_puller_play_summary",
 		Help: "Play status for Ansible run",
 	},
 		[]string{"status"},
 	)
 	promVersion = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "ansible_puller_version",
-		Help: "Current running version of Ansible Puller",
+		Name: "lama_puller_version",
+		Help: "Current running version of Lama Puller",
 	},
 		[]string{"version"},
 	)
 	promDebug = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ansible_puller_debug",
-		Help: "Whether or not Ansible Puller is running in debug mode",
+		Name: "lama_puller_debug",
+		Help: "Whether or not Lama Puller is running in debug mode",
 	})
 	promAnsibleLastExitCode = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ansible_puller_last_exit_code",
+		Name: "lama_puller_last_exit_code",
 		Help: "Return code from the last ansible execution",
 	})
 )
@@ -100,7 +102,7 @@ func init() {
 	pflag.String("ansible-dir", "", "Path in the pulled tarball to cd into before ansible commands - usually dir where ansible.cfg is")
 
 	pflag.String("venv-python", "/usr/bin/python3", "Path to the Python executable to be used for building the virtual environment")
-	pflag.String("venv-path", "/root/.virtualenvs/ansible_puller", "Path to house the virtual environment")
+	pflag.String("venv-path", "/root/.virtualenvs/lama_puller", "Path to house the virtual environment")
 	pflag.String("venv-requirements-file", "requirements.txt", "Relative path in the pulled tarball of the requirements file to populate the virtual environment")
 
 	pflag.Int("sleep", 30, "Number of minutes to sleep between runs")
@@ -144,13 +146,13 @@ func init() {
 func ansibleDisable() {
 	ansibleDisabled = true
 	promAnsibleIsDisabled.Set(1)
-	logrus.Infoln("Disabled Ansible-Puller")
+	logrus.Infoln("Disabled Lama Puller")
 }
 
 func ansibleEnable() {
 	ansibleDisabled = false
 	promAnsibleIsDisabled.Set(0)
-	logrus.Infoln("Enabled Ansible-Puller")
+	logrus.Infoln("Enabled Lama Puller")
 }
 
 func getAnsibleRepository(runDir string) error {
@@ -166,13 +168,13 @@ func getAnsibleRepository(runDir string) error {
 		return errors.New("exactly one remote resource must be specified. Choose one 'http-url' or 's3-arn'")
 	} else if httpURL != "" {
 		remoteHttpURL := fmt.Sprintf("%s://%s", viper.GetString("http-proto"), httpURL)
-		downloader := httpDownloader{
-			username: viper.GetString("http-user"),
-			password: viper.GetString("http-pass"),
-			headerName: viper.GetString("http-header-name"),
+		downloader := downloader.httpDownloader{
+			username:    viper.GetString("http-user"),
+			password:    viper.GetString("http-pass"),
+			headerName:  viper.GetString("http-header-name"),
 			headerValue: viper.GetString("http-header-value"),
 		}
-		err = idempotentFileDownload(downloader, remoteHttpURL, checksumURL, localCacheFile)
+		err = downloader.idempotentFileDownload(downloader, remoteHttpURL, checksumURL, localCacheFile)
 	} else if s3Obj != "" {
 		downloader, createError := createS3Downloader(s3ConnectionRegion)
 		if createError != nil {
@@ -358,7 +360,7 @@ func main() {
 		}
 	}()
 
-	srv := NewServer(runOnce)
+	srv := http.NewServer(runOnce)
 	logrus.Infoln("Starting server on " + viper.GetString("http-listen-string"))
 	logrus.Fatal(srv.ListenAndServe())
 }

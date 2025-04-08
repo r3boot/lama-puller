@@ -1,4 +1,4 @@
-package main
+package downloader
 
 import (
 	"crypto/md5"

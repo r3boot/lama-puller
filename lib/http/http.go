@@ -1,6 +1,6 @@
 // Webserver logic
 
-package main
+package http
 
 import (
 	_ "embed"

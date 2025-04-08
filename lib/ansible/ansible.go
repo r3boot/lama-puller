@@ -1,6 +1,6 @@
 // Collection of methods and types for interacting with Ansible
 
-package main
+package ansible
 
 import (
 	"encoding/json"
