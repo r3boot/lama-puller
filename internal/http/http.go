@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
+
+	"github.com/r3boot/internal/http"
 )
 
 const (
@@ -43,7 +45,7 @@ func MakeRunOnceHandler(runOnce func()) func(http.ResponseWriter, *http.Request)
 func HandlerAnsibleEnable(w http.ResponseWriter, r *http.Request) {
 	disableReason = ""
 
-	ansibleEnable()
+	ansible.ansible.ansibleEnable()
 	http.Redirect(w, r, httpPathAnsibleControl, http.StatusFound)
 }
 
@@ -58,7 +60,7 @@ func HandlerAnsibleDisable(w http.ResponseWriter, r *http.Request) {
 		disableReason = val[0]
 	}
 
-	ansibleDisable()
+	ansible.ansibleDisable()
 	http.Redirect(w, r, httpPathAnsibleControl, http.StatusFound)
 }
 
@@ -70,9 +72,9 @@ func HandlerAnsibleControl(w http.ResponseWriter, r *http.Request) {
 		Hostname              string
 		DisableReason         string
 	}{
-		ansibleDisabled, // Callout to the global var in main... inelegant
-		ansibleLastRunSuccess,
-		ansibleRunning,
+		ansible.ansibleDisabled, // Callout to the global var in main... inelegant
+		ansible.ansibleLastRunSuccess,
+		ansible.ansibleRunning,
 		hostname,
 		disableReason,
 	}
@@ -96,9 +98,9 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	status := map[string]interface{}{
 		"app_name":                 appName,
 		"hostname":                 hostname,
-		"ansible_disabled":         ansibleDisabled,
-		"ansible_running":          ansibleRunning,
-		"ansible_last_run_success": ansibleLastRunSuccess,
+		"ansible_disabled":         ansible.ansibleDisabled,
+		"ansible_running":          ansible.ansibleRunning,
+		"ansible_last_run_success": ansible.ansibleLastRunSuccess,
 		"version":                  Version,
 	}
 

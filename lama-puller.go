@@ -15,7 +15,9 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/r3boot/lama_puller/lib/http"
+	"github.com/r3boot/lama-puller/internal/downloader"
+	"github.com/r3boot/lama-puller/internal/http"
+	"github.com/r3boot/lama-puller/internal/unarchive"
 )
 
 var (
@@ -175,18 +177,11 @@ func getAnsibleRepository(runDir string) error {
 			headerValue: viper.GetString("http-header-value"),
 		}
 		err = downloader.idempotentFileDownload(downloader, remoteHttpURL, checksumURL, localCacheFile)
-	} else if s3Obj != "" {
-		downloader, createError := createS3Downloader(s3ConnectionRegion)
-		if createError != nil {
-			return errors.Wrap(err, "unable to pull Ansible repo")
-		}
-		err = idempotentFileDownload(downloader, s3Obj, checksumURL, localCacheFile)
-	}
 	if err != nil {
 		return errors.Wrap(err, "unable to pull Ansible repo")
 	}
 
-	err = extractTgz(localCacheFile, runDir)
+	err = unarchive.extractTgz(localCacheFile, runDir)
 	if err != nil {
 		return errors.Wrap(err, "unable to extract tgz")
 	}

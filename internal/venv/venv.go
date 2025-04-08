@@ -54,7 +54,7 @@ func makeVenv(cfg VenvConfig) error {
 
 	err = cmd.Run()
 	if err != nil {
-		failedCommandLogger(cmd)
+		util.failedCommandLogger(cmd)
 		return errors.Wrap(err, "unable to create virtual environment")
 	}
 
@@ -247,7 +247,7 @@ func (c VenvCommand) Run() VenvCommandRunOutput {
 		CommandOutput.Error = errors.Wrap(err, "Execution timed out")
 		return CommandOutput
 	} else if err != nil {
-		failedCommandLogger(cmd)
+		util.failedCommandLogger(cmd)
 		if exitError, ok := err.(*exec.ExitError); ok {
 			CommandOutput.Exitcode = exitError.ExitCode()
 		}
